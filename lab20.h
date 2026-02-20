@@ -14,8 +14,22 @@ class Equipment{
 	public:
 		Equipment(int,int,int);
 		vector<int> getStat();			
+
 };
 
+vector<int> Equipment::getStat(){
+    vector<int> stat(3);
+    stat[0] = hpmax;
+    stat[1] = atk;
+    stat[2] = def;
+    return stat;
+}
+
+Equipment::Equipment(int hp, int a, int d){
+    hpmax = hp;
+    atk = a;
+    def = d;
+}
 class Unit{
 		string name;
 		string type;		
@@ -54,6 +68,7 @@ Unit::Unit(string t,string n){
 	}
 	hp = hpmax;	
 	guard_on = false;
+	dodge_on = false;
 	equipment = NULL;
 }
 
@@ -73,7 +88,8 @@ void Unit::showStatus(){
 }
 
 void Unit::newTurn(){
-	guard_on = false; 
+	guard_on = false;
+	dodge_on = false;
 }
 
 int Unit::beAttacked(int oppatk){
@@ -81,7 +97,12 @@ int Unit::beAttacked(int oppatk){
 	if(oppatk > def){
 		dmg = oppatk-def;	
 		if(guard_on) dmg = dmg/3;
-	}	
+        if(dodge_on){
+            int chance = rand()%2;
+            if(chance == 0) dmg = 0;
+            else dmg = dmg*2;
+        }
+	}
 	hp -= dmg;
 	if(hp <= 0){hp = 0;}
 	
@@ -90,6 +111,9 @@ int Unit::beAttacked(int oppatk){
 
 int Unit::attack(Unit &opp){
 	return opp.beAttacked(atk);
+}
+int Unit::ultimateAttack(Unit &opp){
+	return opp.beAttacked(atk*2);
 }
 
 int Unit::heal(){
@@ -101,11 +125,31 @@ int Unit::heal(){
 
 void Unit::guard(){
 	guard_on = true;
-}	
+}
+void Unit::dodge(){
+        dodge_on = true;
+};
 
 bool Unit::isDead(){
 	if(hp <= 0) return true;
 	else return false;
+}
+
+void Unit::equip(Equipment *eq){
+    if(equipment != NULL){
+        vector<int> oldStats = equipment->getStat();
+        hpmax -= oldStats[0];
+        atk -= oldStats[1];
+        def -= oldStats[2];
+    }
+    equipment = eq;
+    vector<int> newStats = equipment->getStat();
+    hpmax += newStats[0];
+    atk += newStats[1];
+    def += newStats[2];
+    if(hp > hpmax){
+        hp = hpmax;
+    }
 }
 
 void drawScene(char p_action,int p,char m_action,int m){
@@ -167,4 +211,3 @@ void playerLose(){
 	cout << "*                                                     *\n";
 	cout << "*******************************************************\n";
 };
-
